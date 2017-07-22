@@ -14,12 +14,27 @@ const (
 	TestBoltFileName = "test.db"
 )
 
+func TestInvalidUserCredentialsErrorMessage(t *testing.T) {
+	err := &InvalidUserCredentialsError{}
+	if err.Error() != "user: invalid username or password" {
+		t.Fatalf("Got unexpected error for InvalidUserCredentialsError; %s", err.Error())
+	}
+}
+
+func TestDuplicateUserErrorMessage(t *testing.T) {
+	err := &DuplicateUserError{}
+	if err.Error() != "user: the provided username is already in use" {
+		t.Fatalf("Got unexpected error for DuplicateUserError; %s", err.Error())
+	}
+}
+
 func TestUserRegister(t *testing.T) {
 	var table = []struct {
 		Username []byte
 		Password []byte
 		Err      error
 	}{
+		{[]byte("joe"), nil, &InvalidUserCredentialsError{}},
 		{[]byte("joe"), []byte("dGVzdDEyMw=="), nil},
 		{[]byte("Joe"), []byte("dGVzdDMyMQo="), &DuplicateUserError{}},
 	}
@@ -58,6 +73,8 @@ func TestUserAuthenticate(t *testing.T) {
 		Password []byte
 		Err      error
 	}{
+		{[]byte("joe"), nil, &InvalidUserCredentialsError{}},
+		{[]byte("jane"), []byte("dGVzdDEyMw=="), &InvalidUserCredentialsError{}},
 		{[]byte("joe"), []byte("dGVzdDEyMw=="), nil},
 		{[]byte("joe"), []byte("dGVzdDMyMQo="), &InvalidUserCredentialsError{}},
 	}
