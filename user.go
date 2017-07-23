@@ -112,10 +112,10 @@ func (u *User) Authenticate(db *bolt.DB) (tokenString string, err error) {
 // The user password hashed and stored in the Password member and the user name
 // is converted to lowercase for case insensitive authentication
 func NewUser(username, password []byte) (*User, error) {
-	pw, _ := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	pw, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
 	return &User{[]byte(strings.ToLower(string(username))), pw, password}, nil
 }
 
@@ -124,12 +124,12 @@ func NewUser(username, password []byte) (*User, error) {
 // The returned user instance omits the password and password hash members
 func NewUserFromJWT(tokenString string) (*User, error) {
 	c := &UserClaims{}
-	jwt.ParseWithClaims(tokenString, c, func(t *jwt.Token) (interface{}, error) {
+	_, err := jwt.ParseWithClaims(tokenString, c, func(t *jwt.Token) (interface{}, error) {
 		return privateKey.Public(), nil
 	})
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, err
+	}
 	u := &User{Username: []byte(c.Username)}
 
 	return u, nil
